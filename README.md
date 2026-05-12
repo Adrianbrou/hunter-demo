@@ -4,7 +4,8 @@
 
 Hunter pairs a live production dashboard with a Claude-powered assistant that operators can ask plain English questions about machine state, anomalies, and troubleshooting procedures. Built specifically for the kind of plant floor Southwire runs at Huntersville (230kV to 400kV transmission cable).
 
-> **Live demo:** lands Thursday May 14 at the Vercel URL pinned here. Screenshot and walkthrough GIF will be added at the same time.
+> **Live demo:** [hunter-demo-bay.vercel.app](https://hunter-demo-bay.vercel.app)
+> Screenshot and walkthrough GIF coming after the Friday demo.
 
 ---
 
