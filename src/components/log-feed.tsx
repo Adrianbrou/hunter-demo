@@ -44,17 +44,23 @@ export function LogFeed() {
 
     fetchLogs();
 
-    // TODO Phase 2: subscribe to new log inserts
-    // const channel = supabase
-    //   .channel("logs-feed")
-    //   .on("postgres_changes", { event: "INSERT", schema: "public", table: "logs" }, (payload) => {
-    //     setLogs((prev) => [payload.new as LogEntry, ...prev].slice(0, FEED_LIMIT));
-    //   })
-    //   .subscribe();
-    // return () => { channel.unsubscribe(); };
+    const channel = supabase
+      .channel("logs-feed")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "logs" },
+        (payload) => {
+          if (!mounted) return;
+          setLogs((prev) =>
+            [payload.new as LogEntry, ...prev].slice(0, FEED_LIMIT),
+          );
+        },
+      )
+      .subscribe();
 
     return () => {
       mounted = false;
+      channel.unsubscribe();
     };
   }, []);
 

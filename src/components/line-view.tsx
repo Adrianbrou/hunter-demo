@@ -41,15 +41,24 @@ export function LineView() {
 
     fetchMachines();
 
-    // TODO Phase 2: subscribe to machines table changes
-    // const channel = supabase
-    //   .channel("machines-changes")
-    //   .on("postgres_changes", { event: "UPDATE", schema: "public", table: "machines" }, ...)
-    //   .subscribe();
-    // return () => { channel.unsubscribe(); };
+    const channel = supabase
+      .channel("machines-changes")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "machines" },
+        (payload) => {
+          if (!mounted) return;
+          const updated = payload.new as Machine;
+          setMachines((prev) =>
+            prev.map((m) => (m.id === updated.id ? updated : m)),
+          );
+        },
+      )
+      .subscribe();
 
     return () => {
       mounted = false;
+      channel.unsubscribe();
     };
   }, []);
 
