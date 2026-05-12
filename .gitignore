@@ -37,3 +37,9 @@ supabase/.branches/
 
 # Vercel
 .vercel
+
+# Private working docs (kept local, not published)
+CLAUDE.md
+PLAN.md
+JARVIS_NOTES.md
+SETUP.md

@@ -20,7 +20,7 @@ export default function HomePage() {
               </span>
             </h1>
             <p className="text-xs text-muted mt-1.5">
-              Huntersville High Voltage Cable Manufacturing
+              Live operations intelligence &middot; Built on the Connected Enterprise pattern
             </p>
           </div>
           <div className="flex items-center gap-5 text-right text-xs">

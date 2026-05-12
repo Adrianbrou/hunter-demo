@@ -21,8 +21,6 @@ I had a 45-minute interview window to make a point, not write a paper. So I buil
 
 ## 🚀 Quick Start
 
-Full step-by-step setup (Supabase project, Edge Function deploy, env vars) lives in [SETUP.md](SETUP.md). The short version once those are in place:
-
 ```bash
 git clone https://github.com/Adrianbrou/hunter-demo.git
 cd hunter-demo
@@ -30,6 +28,8 @@ npm install
 cp .env.example .env.local   # fill in Supabase + Anthropic values
 npm run dev
 ```
+
+You also need a Supabase project (run the migration in `supabase/migrations/` and the seed in `supabase/seed.sql` against it) and an Anthropic API key set as an Edge Function secret on that project.
 
 Open http://localhost:3000. You should see three extrusion lines on the left, a live log feed below them, and the Hunter chat panel on the right.
 
@@ -74,10 +74,7 @@ Three pre-built demo scenarios are pinned at the top of the chat panel:
 
 ```
 hunter-demo/
-├── CLAUDE.md             AI-assistant context for this repo
-├── PLAN.md               phase plan and current state
-├── JARVIS_NOTES.md       architectural reasoning for the interview
-├── SETUP.md              full step-by-step setup walkthrough
+├── README.md             this file
 ├── supabase/
 │   ├── migrations/       database schema
 │   ├── seed.sql          demo data: 3 machines, ~25 logs, 10 KB docs
@@ -106,7 +103,7 @@ npm run build        # production build
 npm run simulate     # log generator (needs Supabase env vars)
 ```
 
-Follow [SETUP.md](SETUP.md) for the full Supabase project and Edge Function setup before the dev server will have data to render.
+You need a Supabase project with the migration + seed applied and the Hunter Edge Function deployed before the dev server has data to render.
 
 ---
 
