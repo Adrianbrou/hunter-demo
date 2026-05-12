@@ -21,12 +21,13 @@ const FEED_LIMIT = 50;
 export function LogFeed() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
 
     async function fetchLogs() {
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from("logs")
         .select("*")
         .order("ts", { ascending: false })
@@ -34,10 +35,12 @@ export function LogFeed() {
 
       if (!mounted) return;
 
-      if (error) {
-        console.error("Failed to fetch logs:", error);
+      if (fetchError) {
+        console.error("Failed to fetch logs:", fetchError);
+        setError("Could not load the log feed. Live updates will appear if the connection recovers.");
       } else if (data) {
         setLogs(data as LogEntry[]);
+        setError(null);
       }
       setLoading(false);
     }
@@ -75,11 +78,21 @@ export function LogFeed() {
         </span>
       </div>
 
+      {error && !loading && logs.length === 0 && (
+        <div className="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300 mb-3">
+          {error}
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto scrollbar-thin pr-2">
         {loading ? (
-          <div className="text-muted text-sm">Loading logs...</div>
+          <ul className="space-y-1 font-mono text-xs">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <LogRowSkeleton key={i} />
+            ))}
+          </ul>
         ) : logs.length === 0 ? (
-          <div className="text-muted text-sm">No logs yet.</div>
+          <div className="text-muted text-sm">No logs yet. New entries will stream in here.</div>
         ) : (
           <ul className="space-y-1 font-mono text-xs">
             {logs.map((log) => (
@@ -89,6 +102,16 @@ export function LogFeed() {
         )}
       </div>
     </section>
+  );
+}
+
+function LogRowSkeleton() {
+  return (
+    <li className="py-1.5 px-3 rounded border-l-2 border-border flex gap-3 items-center animate-pulse">
+      <div className="h-3 w-16 bg-border rounded shrink-0" />
+      <div className="h-3 w-14 bg-border/60 rounded shrink-0" />
+      <div className="h-3 flex-1 bg-border/40 rounded" />
+    </li>
   );
 }
 

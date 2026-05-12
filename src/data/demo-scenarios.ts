@@ -32,4 +32,12 @@ export const DEMO_SCENARIOS: DemoScenario[] = [
     question:
       "What's the moisture spec for the Champlain Hudson order running on Line 2 right now?",
   },
+  {
+    id: "vineyard-wind-quality",
+    label: "Vineyard Wind quality checks",
+    description:
+      "Cross-doc synthesis: 400kV quality, order spec, high-pot testing.",
+    question:
+      "What quality checks are critical for the Vineyard Wind segment on Line 3?",
+  },
 ];

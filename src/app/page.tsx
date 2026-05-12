@@ -5,24 +5,39 @@ import { HunterChat } from "@/components/hunter-chat";
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Southwire-blue accent strip */}
+      <div className="h-0.5 bg-gradient-to-r from-primary via-primary-light to-primary" />
+
       {/* Header */}
       <header className="border-b border-border bg-panel">
-        <div className="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-[1600px] mx-auto px-6 py-5 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold flex items-center gap-3">
-              <span className="inline-block w-2 h-2 rounded-full bg-status-running animate-pulse-slow" />
+            <h1 className="text-2xl font-semibold flex items-center gap-3 tracking-tight">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-status-running animate-pulse-slow shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
               Hunter
-              <span className="text-muted text-sm font-normal">
+              <span className="text-muted text-sm font-normal hidden md:inline">
                 Plant Floor AI Assistant
               </span>
             </h1>
-            <p className="text-xs text-muted mt-1">
-              Huntersville High Voltage Cable Manufacturing &middot; Demo Build
+            <p className="text-xs text-muted mt-1.5">
+              Huntersville High Voltage Cable Manufacturing
             </p>
           </div>
-          <div className="text-right text-xs text-muted">
-            <div>3 lines monitored</div>
-            <div className="font-mono">230kV / 345kV / 400kV</div>
+          <div className="flex items-center gap-5 text-right text-xs">
+            <div>
+              <div className="text-muted uppercase tracking-wider">Lines</div>
+              <div className="font-mono text-foreground mt-0.5">
+                230kV &middot; 345kV &middot; 400kV
+              </div>
+            </div>
+            <div className="h-9 w-px bg-border" />
+            <div>
+              <div className="text-muted uppercase tracking-wider">Feed</div>
+              <div className="font-mono text-status-running flex items-center gap-1.5 mt-0.5 justify-end">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-status-running animate-pulse-slow" />
+                Live
+              </div>
+            </div>
           </div>
         </div>
       </header>

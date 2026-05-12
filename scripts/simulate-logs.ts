@@ -79,6 +79,14 @@ function pick<T>(arr: T[]): T {
 
 const MACHINE_IDS = ["line-1", "line-2", "line-3"];
 
+// Anchor points for live metric jitter. Line 3 stays in its alarm state
+// (3.2 mpm) so the demo always has a visible anomaly to drive Hunter chat.
+const MACHINE_ANCHORS: Record<string, { temp_c: number; speed_mpm: number }> = {
+  "line-1": { temp_c: 185.4, speed_mpm: 4.6 },
+  "line-2": { temp_c: 192.1, speed_mpm: 3.8 },
+  "line-3": { temp_c: 198.5, speed_mpm: 3.2 },
+};
+
 async function emitLog() {
   const machineId = pick(MACHINE_IDS);
   const severity = pickSeverity();
@@ -101,13 +109,37 @@ async function emitLog() {
   }
 }
 
+async function jitterMachine() {
+  const machineId = pick(MACHINE_IDS);
+  const anchor = MACHINE_ANCHORS[machineId];
+  const newTemp = +(anchor.temp_c + (Math.random() - 0.5) * 0.6).toFixed(2);
+  const newSpeed = +(anchor.speed_mpm + (Math.random() - 0.5) * 0.1).toFixed(2);
+
+  const { error } = await supabase
+    .from("machines")
+    .update({
+      extrusion_temp_c: newTemp,
+      line_speed_mpm: newSpeed,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", machineId);
+
+  if (error) {
+    console.error("Machine update failed:", error.message);
+  } else {
+    console.log(
+      `[${new Date().toISOString()}] ${machineId} jitter: temp=${newTemp} C, speed=${newSpeed} mpm`,
+    );
+  }
+}
+
 async function main() {
   console.log("Hunter log simulator started. Press Ctrl+C to stop.");
-  console.log("Emitting one log every 3 seconds.\n");
+  console.log("Emitting one log every 3 seconds and one machine jitter every 15 seconds.\n");
 
-  // Emit one immediately, then on interval
   await emitLog();
   setInterval(emitLog, 3000);
+  setInterval(jitterMachine, 15000);
 }
 
 main().catch((err) => {

@@ -19,22 +19,25 @@ import { Activity, Thermometer, Gauge } from "lucide-react";
 export function LineView() {
   const [machines, setMachines] = useState<Machine[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
 
     async function fetchMachines() {
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from("machines")
         .select("*")
         .order("id");
 
       if (!mounted) return;
 
-      if (error) {
-        console.error("Failed to fetch machines:", error);
+      if (fetchError) {
+        console.error("Failed to fetch machines:", fetchError);
+        setError("Could not reach the production database. Retrying via realtime.");
       } else if (data) {
         setMachines(data as Machine[]);
+        setError(null);
       }
       setLoading(false);
     }
@@ -62,29 +65,53 @@ export function LineView() {
     };
   }, []);
 
-  if (loading) {
-    return (
-      <div className="bg-panel border border-border rounded-lg p-6">
-        <div className="text-muted text-sm">Loading lines...</div>
-      </div>
-    );
-  }
-
   return (
     <section className="bg-panel border border-border rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">
           Production Lines
         </h2>
-        <span className="text-xs text-muted">{machines.length} active</span>
+        <span className="text-xs text-muted">
+          {loading ? "Loading..." : `${machines.length} active`}
+        </span>
       </div>
 
+      {error && !loading && machines.length === 0 && (
+        <div className="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300 mb-4">
+          {error}
+        </div>
+      )}
+
       <div className="grid grid-cols-3 gap-4">
-        {machines.map((m) => (
-          <MachineCard key={m.id} machine={m} />
-        ))}
+        {loading ? (
+          <>
+            <MachineCardSkeleton />
+            <MachineCardSkeleton />
+            <MachineCardSkeleton />
+          </>
+        ) : (
+          machines.map((m) => <MachineCard key={m.id} machine={m} />)
+        )}
       </div>
     </section>
+  );
+}
+
+function MachineCardSkeleton() {
+  return (
+    <div className="rounded-md p-4 border border-border bg-panel-elevated animate-pulse">
+      <div className="flex items-center justify-between mb-2">
+        <div className="h-4 w-32 bg-border rounded" />
+        <div className="w-2.5 h-2.5 rounded-full bg-border" />
+      </div>
+      <div className="h-3 w-full bg-border/60 rounded mb-1" />
+      <div className="h-3 w-2/3 bg-border/60 rounded mb-4" />
+      <div className="space-y-2">
+        <div className="h-3 bg-border/60 rounded" />
+        <div className="h-3 bg-border/60 rounded" />
+        <div className="h-3 bg-border/60 rounded" />
+      </div>
+    </div>
   );
 }
 
