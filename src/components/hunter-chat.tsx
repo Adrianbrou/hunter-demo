@@ -5,7 +5,23 @@ import { askHunter } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import type { HunterMessage } from "@/lib/types";
 import { DEMO_SCENARIOS } from "@/data/demo-scenarios";
-import { Send, Bot, User, Loader2 } from "lucide-react";
+import {
+  Send,
+  Bot,
+  User,
+  Gauge,
+  ShieldAlert,
+  Beaker,
+  Layers,
+  type LucideIcon,
+} from "lucide-react";
+
+const SCENARIO_ICONS: Record<string, LucideIcon> = {
+  "speed-anomaly": Gauge,
+  "safety-override": ShieldAlert,
+  "champlain-hudson": Beaker,
+  "vineyard-wind-quality": Layers,
+};
 
 // =============================================================
 // HunterChat: Surface 3
@@ -24,7 +40,7 @@ export function HunterChat() {
     {
       role: "assistant",
       content:
-        "I'm Hunter. I can see the current state of all three lines and the recent log feed. Ask me anything about what's happening on the floor, or click one of the scenarios below to see a typical interaction.",
+        "I'm Hunter. I can see live machine state, the recent log feed, and the maintenance knowledge base. Click a scenario below or type a question about any line.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -91,17 +107,26 @@ export function HunterChat() {
           Demo scenarios
         </p>
         <div className="flex flex-col gap-1.5">
-          {DEMO_SCENARIOS.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => handleSend(s.question)}
-              disabled={sending}
-              className="text-left text-xs px-3 py-1.5 rounded bg-panel-elevated border border-border hover:border-primary-light/50 hover:bg-primary/10 transition-colors disabled:opacity-50"
-            >
-              <span className="text-foreground font-medium">{s.label}</span>
-              <span className="text-muted ml-2">&middot; {s.description}</span>
-            </button>
-          ))}
+          {DEMO_SCENARIOS.map((s) => {
+            const Icon = SCENARIO_ICONS[s.id] ?? Bot;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => handleSend(s.question)}
+                disabled={sending}
+                className="group text-left text-xs px-3 py-2 rounded bg-panel-elevated border border-border hover:border-primary-light/60 hover:bg-primary/10 transition-colors disabled:opacity-50 flex items-start gap-2.5"
+              >
+                <Icon className="w-3.5 h-3.5 mt-0.5 text-primary-light/80 group-hover:text-primary-light shrink-0" />
+                <span className="flex-1 min-w-0">
+                  <span className="text-foreground font-medium block">{s.label}</span>
+                  <span className="text-muted text-[11px] leading-snug block mt-0.5">
+                    {s.description}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -110,12 +135,7 @@ export function HunterChat() {
         {messages.map((msg, i) => (
           <Message key={i} msg={msg} />
         ))}
-        {sending && (
-          <div className="flex items-center gap-2 text-muted text-sm">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Hunter is thinking...
-          </div>
-        )}
+        {sending && <TypingIndicator />}
         <div ref={endRef} />
       </div>
 
@@ -165,19 +185,19 @@ function Message({ msg }: { msg: HunterMessage }) {
       </div>
       <div
         className={cn(
-          "rounded-lg px-3 py-2 text-sm max-w-[85%] whitespace-pre-wrap",
+          "rounded-lg px-3 py-2 text-sm max-w-[85%] whitespace-pre-wrap leading-relaxed",
           isUser
             ? "bg-primary/15 border border-primary/30"
             : "bg-panel-elevated border border-border",
         )}
       >
-        {msg.content}
+        {isUser ? msg.content : <AssistantBody text={msg.content} />}
         {msg.citations && msg.citations.length > 0 && (
           <div className="mt-2 pt-2 border-t border-border/50 flex flex-wrap gap-1.5">
             {msg.citations.map((c) => (
               <span
                 key={c.doc_id}
-                className="text-xs px-1.5 py-0.5 rounded bg-primary/20 text-primary-light"
+                className="text-xs px-1.5 py-0.5 rounded bg-primary/20 text-primary-light font-mono"
                 title={c.title}
               >
                 {c.doc_id}
@@ -185,6 +205,42 @@ function Message({ msg }: { msg: HunterMessage }) {
             ))}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// Renders Hunter's text with inline KB-XXX mentions styled as pills.
+function AssistantBody({ text }: { text: string }) {
+  const parts = text.split(/(KB-\d+)/g);
+  return (
+    <>
+      {parts.map((part, i) =>
+        /^KB-\d+$/.test(part) ? (
+          <span
+            key={i}
+            className="inline-block px-1.5 py-0.5 mx-0.5 rounded bg-primary/20 text-primary-light font-mono text-[10px] font-semibold align-[1px]"
+          >
+            {part}
+          </span>
+        ) : (
+          <span key={i}>{part}</span>
+        ),
+      )}
+    </>
+  );
+}
+
+function TypingIndicator() {
+  return (
+    <div className="flex items-center gap-2 text-muted text-sm">
+      <div className="w-6 h-6 rounded-full bg-panel-elevated border border-border flex items-center justify-center shrink-0">
+        <Bot className="w-3.5 h-3.5 text-primary-light" />
+      </div>
+      <div className="bg-panel-elevated border border-border rounded-lg px-3 py-2.5 flex items-center gap-1">
+        <span className="w-1.5 h-1.5 rounded-full bg-primary-light animate-bounce [animation-delay:-0.3s]" />
+        <span className="w-1.5 h-1.5 rounded-full bg-primary-light animate-bounce [animation-delay:-0.15s]" />
+        <span className="w-1.5 h-1.5 rounded-full bg-primary-light animate-bounce" />
       </div>
     </div>
   );
