@@ -1,7 +1,7 @@
 # Hunter Build Plan
 
 **Demo date:** Friday May 15, 2026 at 10:00 AM Eastern
-**Today:** Monday May 11, 2026
+**Today:** Tuesday May 12, 2026
 
 ---
 
@@ -21,16 +21,28 @@ Status: **COMPLETE**
 - [x] .env.example
 - [x] .gitignore
 
-**To get from Phase 1 to Phase 2:**
+**Phase 1 to Phase 2 setup, completed Monday night by Jarvis:**
 
-1. Adrian creates the `hunter-demo` repo on GitHub
-2. Extracts the zip into a local folder
-3. Runs `git init && git add . && git commit -m "Initial scaffold" && git push`
-4. Runs `npm install`
-5. Creates a fresh Supabase project named `hunter-demo`
-6. Runs the migration and seed SQL in the Supabase dashboard
-7. Copies env vars into `.env.local`
-8. Runs `npm run dev` and verifies the page loads (will look mostly empty until Phase 2)
+- [x] GitHub repo `Adrianbrou/hunter-demo` created, scaffold pushed
+- [x] `npm install` completed (430 packages, no fatal errors)
+- [x] Fresh Supabase project `hunter-demo` created in the new free `hunter` org
+  - Project ref: `uykwrvcryuxfokwhwmhg`
+  - Region: us-west-2
+  - URL: <https://uykwrvcryuxfokwhwmhg.supabase.co>
+- [x] Schema migration applied (machines, logs, knowledge_base, recent_logs view, realtime enabled)
+- [x] Seed data loaded: 3 machines, 25 logs, 10 KB docs (counts verified)
+- [x] `.env.local` written with NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY
+- [x] Hunter Edge Function deployed (version 1, ACTIVE, JWT verification on)
+- [x] Model ID fix: `claude-sonnet-4-5` -> `claude-sonnet-4-6` in [supabase/functions/hunter/index.ts](supabase/functions/hunter/index.ts)
+- [x] README rewritten to Adrian's standard (Motivation, Quick Start, Usage, Contributing sections)
+
+**Still needs Adrian's hands before Phase 2 build:**
+
+- [ ] Paste Anthropic API key from console.anthropic.com into `.env.local` (replace `sk-ant-your-key-here`)
+- [ ] Set the same key as an Edge Function secret (Supabase dashboard -> Project Settings -> Edge Functions -> Secrets, add `ANTHROPIC_API_KEY=sk-ant-...`)
+- [ ] Paste service role key from Supabase dashboard (Project Settings -> API -> service_role) into `.env.local` (replace `PASTE_SERVICE_ROLE_KEY_FROM_DASHBOARD`). Only needed for the simulate-logs script.
+- [ ] Commit and push the README rewrite + model fix (not yet on GitHub, only the initial scaffold is)
+- [ ] Run `npm run dev` and verify localhost:3000 shows the 3 machine cards and the 25 seeded logs. Hunter chat will return "unavailable" until the Anthropic secret is set.
 
 ---
 
