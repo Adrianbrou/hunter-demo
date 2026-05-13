@@ -73,6 +73,15 @@ async function emitLog() {
   const message = pick(NOMINAL_LOGS_BY_LINE[machineId]);
   const isAnomaly = severity === "anomaly";
 
+  // Sensor snapshot anchored to the machine's current state so the
+  // Sparkline trend looks coherent (small jitter around the anchor).
+  const anchor = MACHINE_ANCHORS[machineId];
+  const sensor_snapshot = {
+    speed_mpm: +(anchor.speed_mpm + (Math.random() - 0.5) * 0.15).toFixed(2),
+    temp_c: +(anchor.temp_c + (Math.random() - 0.5) * 0.5).toFixed(2),
+    cooling_bar: +(4.5 + (Math.random() - 0.5) * 0.25).toFixed(2),
+  };
+
   const { error } = await supabase.from("logs").insert({
     machine_id: machineId,
     severity,
@@ -80,6 +89,7 @@ async function emitLog() {
     is_anomaly: isAnomaly,
     anomaly_score: isAnomaly ? 0.55 + Math.random() * 0.3 : null,
     anomaly_type: isAnomaly ? "speed_deviation" : null,
+    sensor_snapshot,
   });
 
   if (error) {

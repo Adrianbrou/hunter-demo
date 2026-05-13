@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { cn, statusColor } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type { Machine } from "@/lib/types";
 import {
   Activity,
@@ -12,6 +12,37 @@ import {
   ClipboardEdit,
 } from "lucide-react";
 import { LogIncidentDialog } from "./log-incident-dialog";
+import { Sparkline } from "./sparkline";
+
+function computeHealth(machine: Machine): {
+  score: number;
+  tier: "good" | "watch" | "alarm";
+  label: string;
+} {
+  if (machine.status === "alarm") {
+    return { score: 31, tier: "alarm", label: "ALARM" };
+  }
+  if (machine.status === "idle") {
+    return { score: 68, tier: "watch", label: "IDLE" };
+  }
+  let score = 100;
+  const tempDev =
+    machine.extrusion_temp_c && machine.baseline_temp_c
+      ? Math.abs(machine.extrusion_temp_c - machine.baseline_temp_c) /
+        machine.baseline_temp_c
+      : 0;
+  const speedDev =
+    machine.line_speed_mpm && machine.baseline_speed_mpm
+      ? Math.abs(machine.line_speed_mpm - machine.baseline_speed_mpm) /
+        machine.baseline_speed_mpm
+      : 0;
+  score -= Math.min(20, Math.floor(tempDev * 200));
+  score -= Math.min(20, Math.floor(speedDev * 200));
+  score = Math.max(0, score);
+  const tier = score >= 90 ? "good" : score >= 75 ? "watch" : "alarm";
+  const label = score >= 90 ? "HEALTHY" : score >= 75 ? "WATCH" : "ALARM";
+  return { score, tier, label };
+}
 
 // =============================================================
 // LineView: Surface 1
@@ -215,16 +246,11 @@ function MachineCard({ machine }: { machine: Machine }) {
         isAlarm ? "border-red-500/50" : "border-border",
       )}
     >
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-semibold">{machine.name}</span>
-        <span
-          className={cn(
-            "inline-block w-2.5 h-2.5 rounded-full",
-            statusColor(machine.status),
-            machine.status === "running" && "animate-pulse-slow",
-          )}
-          aria-label={machine.status}
-        />
+      <div className="flex items-start justify-between mb-2 gap-2">
+        <span className="text-sm font-semibold leading-tight">
+          {machine.name}
+        </span>
+        <HealthBadge machine={machine} />
       </div>
 
       <p className="text-xs text-muted mb-3 line-clamp-2">{machine.product}</p>
@@ -256,7 +282,41 @@ function MachineCard({ machine }: { machine: Machine }) {
           stringValue={machine.status.toUpperCase()}
         />
       </div>
+
+      <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between">
+        <span className="text-[10px] uppercase tracking-wider text-muted">
+          Speed trend
+        </span>
+        <Sparkline
+          machineId={machine.id}
+          metric="speed_mpm"
+          className={cn(
+            isAlarm ? "text-red-400" : "text-primary-light",
+          )}
+        />
+      </div>
     </div>
+  );
+}
+
+function HealthBadge({ machine }: { machine: Machine }) {
+  const { score, tier, label } = computeHealth(machine);
+  const cls = {
+    good: "bg-status-running/10 border-status-running/40 text-status-running",
+    watch: "bg-amber-500/10 border-amber-500/40 text-amber-300",
+    alarm: "bg-red-500/15 border-red-500/50 text-red-300",
+  }[tier];
+  return (
+    <span
+      className={cn(
+        "shrink-0 flex items-center gap-1 text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded border tabular-nums",
+        cls,
+      )}
+      title={`Health score ${score}`}
+    >
+      <span className="text-[11px]">{score}</span>
+      <span className="opacity-80">{label}</span>
+    </span>
   );
 }
 

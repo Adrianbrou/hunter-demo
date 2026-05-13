@@ -14,6 +14,8 @@ import {
   Beaker,
   Layers,
   BookOpen,
+  TrendingUp,
+  History,
   type LucideIcon,
 } from "lucide-react";
 
@@ -22,6 +24,8 @@ const SCENARIO_ICONS: Record<string, LucideIcon> = {
   "safety-override": ShieldAlert,
   "champlain-hudson": Beaker,
   "vineyard-wind-quality": Layers,
+  "predict-failures": TrendingUp,
+  "explain-past-incident": History,
 };
 
 // =============================================================
@@ -207,14 +211,32 @@ function Message({ msg }: { msg: HunterMessage }) {
               </span>
             ))}
             {msg.matchedIncidents !== undefined && msg.matchedIncidents > 0 && (
-              <span
-                className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-200 flex items-center gap-1"
-                title="Past incidents on these machines that match the current pattern"
-              >
-                <BookOpen className="w-2.5 h-2.5" />
-                Drew on {msg.matchedIncidents} past incident
-                {msg.matchedIncidents === 1 ? "" : "s"}
-              </span>
+              (() => {
+                const high = msg.matchedIncidents >= 3;
+                const cls = high
+                  ? "bg-status-running/15 border-status-running/40 text-status-running"
+                  : "bg-amber-500/15 border-amber-500/30 text-amber-200";
+                return (
+                  <span
+                    className={cn(
+                      "text-[10px] px-1.5 py-0.5 rounded border flex items-center gap-1",
+                      cls,
+                    )}
+                    title={
+                      high
+                        ? "Strong pattern match across multiple past incidents on this machine"
+                        : "Some past incidents on this machine match the current pattern"
+                    }
+                  >
+                    <BookOpen className="w-2.5 h-2.5" />
+                    {msg.matchedIncidents} past incident
+                    {msg.matchedIncidents === 1 ? "" : "s"}
+                    <span className="opacity-80 font-semibold ml-0.5">
+                      &middot; {high ? "HIGH" : "MEDIUM"} confidence
+                    </span>
+                  </span>
+                );
+              })()
             )}
           </div>
         )}

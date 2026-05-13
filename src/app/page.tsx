@@ -22,6 +22,9 @@ export default function HomePage() {
             <p className="text-xs text-muted mt-1.5">
               Live operations intelligence &middot; Built on the Connected Enterprise pattern
             </p>
+            <p className="text-[10px] text-muted/70 mt-1">
+              Demo system &middot; All data synthetic &middot; Built for portfolio review
+            </p>
           </div>
           <div className="flex items-center gap-5 text-right text-xs">
             <div>

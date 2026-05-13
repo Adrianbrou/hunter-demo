@@ -40,4 +40,20 @@ export const DEMO_SCENARIOS: DemoScenario[] = [
     question:
       "What quality checks are critical for the Vineyard Wind segment on Line 3?",
   },
+  {
+    id: "predict-failures",
+    label: "Trending toward failure?",
+    description:
+      "Hunter scans the recent feed for early-warning patterns across lines.",
+    question:
+      "Based on the recent log feed and machine state, are any of the lines trending toward a failure? What should we watch?",
+  },
+  {
+    id: "explain-past-incident",
+    label: "Explain last filter swap",
+    description:
+      "Root-cause narrative for the 14-day-ago CL-FILTER-01 incident.",
+    question:
+      "Two weeks ago we had a speed anomaly on Line 3. Walk me through what actually happened and how it was resolved.",
+  },
 ];
