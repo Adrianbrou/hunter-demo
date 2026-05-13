@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { cn, formatTime, severityColor } from "@/lib/utils";
 import type { LogEntry } from "@/lib/types";
 import { AlertTriangle } from "lucide-react";
+import { SimulatorControl } from "./simulator-control";
 
 // =============================================================
 // LogFeed: Surface 2
@@ -69,13 +70,16 @@ export function LogFeed() {
 
   return (
     <section className="bg-panel border border-border rounded-lg p-6 flex-1 flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 gap-3">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">
           Live Log Feed
         </h2>
-        <span className="text-xs text-muted">
-          {logs.length} entries &middot; last {FEED_LIMIT}
-        </span>
+        <div className="flex items-center gap-3">
+          <SimulatorControl />
+          <span className="text-xs text-muted">
+            {logs.length} entries &middot; last {FEED_LIMIT}
+          </span>
+        </div>
       </div>
 
       {error && !loading && logs.length === 0 && (
