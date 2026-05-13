@@ -13,6 +13,7 @@ import {
   ShieldAlert,
   Beaker,
   Layers,
+  BookOpen,
   type LucideIcon,
 } from "lucide-react";
 
@@ -73,6 +74,7 @@ export function HunterChat() {
           role: "assistant",
           content: res.answer,
           citations: res.citations,
+          matchedIncidents: res.matchedIncidents,
         },
       ]);
     } catch (err) {
@@ -192,17 +194,28 @@ function Message({ msg }: { msg: HunterMessage }) {
         )}
       >
         {isUser ? msg.content : <AssistantBody text={msg.content} />}
-        {msg.citations && msg.citations.length > 0 && (
-          <div className="mt-2 pt-2 border-t border-border/50 flex flex-wrap gap-1.5">
-            {msg.citations.map((c) => (
+        {((msg.citations && msg.citations.length > 0) ||
+          (msg.matchedIncidents && msg.matchedIncidents > 0)) && (
+          <div className="mt-2 pt-2 border-t border-border/50 flex flex-wrap items-center gap-1.5">
+            {msg.citations?.map((c) => (
               <span
                 key={c.doc_id}
-                className="text-xs px-1.5 py-0.5 rounded bg-primary/20 text-primary-light font-mono"
+                className="text-[10px] px-1.5 py-0.5 rounded bg-primary/20 text-primary-light font-mono"
                 title={c.title}
               >
                 {c.doc_id}
               </span>
             ))}
+            {msg.matchedIncidents !== undefined && msg.matchedIncidents > 0 && (
+              <span
+                className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-200 flex items-center gap-1"
+                title="Past incidents on these machines that match the current pattern"
+              >
+                <BookOpen className="w-2.5 h-2.5" />
+                Drew on {msg.matchedIncidents} past incident
+                {msg.matchedIncidents === 1 ? "" : "s"}
+              </span>
+            )}
           </div>
         )}
       </div>

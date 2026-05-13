@@ -154,8 +154,70 @@ insert into logs (machine_id, ts, severity, message, is_anomaly, anomaly_type, a
 ('line-3', now() - interval '45 seconds', 'anomaly', 'ANOMALY HOLD: Quality flag raised. Awaiting operator response.', true, 'speed_deviation', 0.78, '{"speed_mpm":3.2,"cooling_bar":4.1}');
 
 -- =============================================================
+-- INCIDENT MEMORY: past resolved anomalies on these lines.
+-- Hunter uses these so its answers cite the team's actual fixes,
+-- not just the manual.
+-- =============================================================
+insert into incident_memory (occurred_at, machine_id, anomaly_type, symptom, root_cause, fix_applied, fixed_by, resolution_minutes, outcome, notes) values
+
+(now() - interval '14 days', 'line-3', 'speed_deviation',
+  'Line 3 speed dropped to 3.4 mpm, 24 percent below baseline; cooling pressure dropped to 4.05 bar.',
+  'CL-FILTER-01 differential pressure measured at 0.45 bar, above the 0.4 bar replacement threshold from KB-005.',
+  'Filter cartridge replaced; cooling pressure recovered to 4.6 bar within 4 minutes; line ramped to baseline.',
+  'Shift lead, shift 2',
+  22,
+  'resolved',
+  'Filter had passed 5100 service hours, slightly over the recommended 5000 hour replacement schedule.'),
+
+(now() - interval '8 days', 'line-3', 'speed_deviation',
+  'Brief speed dip to 3.9 mpm for about 10 seconds, then auto-recovered to baseline.',
+  'CL-PUMP-01 momentary trip; failover to CL-PUMP-02 engaged within 8 seconds as designed in KB-005.',
+  'No operator action required. Logged for maintenance pump inspection at next scheduled stop.',
+  'Auto-recovered',
+  1,
+  'resolved',
+  'Failover behavior matched documented expectation. CL-PUMP-01 inspected next stop with no faults found.'),
+
+(now() - interval '3 days', 'line-2', 'material_alert',
+  'Pellet moisture sensor MOIST-01 tripped at 0.052 percent, above the 0.05 percent threshold.',
+  'Brief ambient humidity spike during early morning shift change.',
+  'Engaged dryer recovery mode for 90 minutes per KB-003; verified two consecutive 5 minute readings below 0.04 percent before resuming.',
+  'Operator, shift 1',
+  92,
+  'resolved',
+  'Champlain Hudson order on Line 2; tightened 0.03 percent customer spec applied for the resume threshold.'),
+
+(now() - interval '21 days', 'line-3', 'quality_hold',
+  '400kV product concentricity variance measured at 0.35 mm at segment 14, above the 0.3 mm Vineyard Wind spec from KB-006.',
+  'Tower fan unit TFU-03 was running at 92 percent of nominal RPM, causing uneven cooling on the descent.',
+  'Fan unit retorqued; verified RPM within 1 percent of nominal; reran concentricity verification on the next segment with no further variance.',
+  'Maintenance lead',
+  47,
+  'resolved',
+  'Caught before any Vineyard Wind segment shipped. Tower fan inspection added to the weekly maintenance schedule.'),
+
+(now() - interval '35 days', 'line-1', 'temp_drift',
+  'Extrusion zone 2 temperature drifted 3.2 C above setpoint over 90 minutes despite stable cooling.',
+  'Heater band HTR-02 was reading inconsistently; thermocouple TC-02 disagreed with TC-01 by 1.8 C.',
+  'Replaced HTR-02 heater band at next scheduled stop; TC-02 recalibrated.',
+  'Maintenance, shift 3',
+  null,
+  'resolved',
+  'HTR-02 had 16,800 service hours, within the expected 18 month mean time to failure window from KB-002.'),
+
+(now() - interval '42 days', 'line-3', 'quality_hold',
+  'Segment 12 of 400kV cable failed the extended high-pot test at 1000kV DC per KB-004.',
+  'Time-domain reflectometry pinpointed the defect at 174 m into the segment; root cause was moisture inclusion from a brief MOIST-01 sensor lag the previous shift.',
+  'Segment 12 (118 m) scrapped. Process change: moisture re-check interval tightened from 10 to 5 minutes for the rest of the Vineyard Wind run.',
+  'Quality team and shift lead',
+  null,
+  'recurred',
+  'Second moisture-driven high-pot failure on Vineyard Wind product this quarter. Flagged for deeper root cause review.');
+
+-- =============================================================
 -- After seed: a count check that the dashboard can show
 -- =============================================================
--- select count(*) from machines;     -- expect 3
--- select count(*) from logs;         -- expect ~26
--- select count(*) from knowledge_base; -- expect 10
+-- select count(*) from machines;          -- expect 3
+-- select count(*) from logs;              -- expect ~26
+-- select count(*) from knowledge_base;    -- expect 10
+-- select count(*) from incident_memory;   -- expect 6

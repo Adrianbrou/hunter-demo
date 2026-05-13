@@ -45,10 +45,29 @@ export interface KnowledgeBaseDoc {
   created_at: string;
 }
 
+export interface IncidentMemory {
+  id: number;
+  occurred_at: string;
+  machine_id: string;
+  anomaly_type: string;
+  symptom: string;
+  root_cause: string;
+  fix_applied: string;
+  fixed_by: string | null;
+  resolution_minutes: number | null;
+  outcome: "resolved" | "recurred" | "escalated";
+  notes: string | null;
+}
+
+export type IncidentInsert = Omit<IncidentMemory, "id" | "occurred_at"> & {
+  occurred_at?: string;
+};
+
 export interface HunterMessage {
   role: "user" | "assistant";
   content: string;
   citations?: Array<{ doc_id: string; title: string }>;
+  matchedIncidents?: number;
 }
 
 export interface DemoScenario {

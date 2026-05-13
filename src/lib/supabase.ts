@@ -25,6 +25,7 @@ export async function askHunter(
 ): Promise<{
   answer: string;
   citations: Array<{ doc_id: string; title: string }>;
+  matchedIncidents?: number;
 }> {
   const url = `${supabaseUrl}/functions/v1/hunter`;
 

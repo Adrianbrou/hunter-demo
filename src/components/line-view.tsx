@@ -4,7 +4,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { cn, statusColor } from "@/lib/utils";
 import type { Machine } from "@/lib/types";
-import { Activity, Thermometer, Gauge, AlertTriangle } from "lucide-react";
+import {
+  Activity,
+  Thermometer,
+  Gauge,
+  AlertTriangle,
+  ClipboardEdit,
+} from "lucide-react";
+import { LogIncidentDialog } from "./log-incident-dialog";
 
 // =============================================================
 // LineView: Surface 1
@@ -20,6 +27,12 @@ export function LineView() {
   const [machines, setMachines] = useState<Machine[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [logDialogOpen, setLogDialogOpen] = useState(false);
+  const [logPrefill, setLogPrefill] = useState<{
+    machineId?: string;
+    anomalyType?: string;
+    symptom?: string;
+  }>({});
 
   useEffect(() => {
     let mounted = true;
@@ -67,10 +80,22 @@ export function LineView() {
 
   const activeAnomalies = machines.filter((m) => m.status === "alarm");
 
+  function openLogForAnomaly(machine?: Machine) {
+    setLogPrefill({
+      machineId: machine?.id,
+      anomalyType: "speed_deviation",
+      symptom: machine?.notes ?? "",
+    });
+    setLogDialogOpen(true);
+  }
+
   return (
     <>
       {activeAnomalies.length > 0 && (
-        <AnomalyBanner anomalies={activeAnomalies} />
+        <AnomalyBanner
+          anomalies={activeAnomalies}
+          onLogResolution={() => openLogForAnomaly(activeAnomalies[0])}
+        />
       )}
 
       <section className="bg-panel border border-border rounded-lg p-6">
@@ -78,9 +103,20 @@ export function LineView() {
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">
             Production Lines
           </h2>
-          <span className="text-xs text-muted">
-            {loading ? "Loading..." : `${machines.length} active`}
-          </span>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => openLogForAnomaly()}
+              disabled={loading || machines.length === 0}
+              className="text-xs text-muted hover:text-primary-light transition-colors flex items-center gap-1 disabled:opacity-50"
+            >
+              <ClipboardEdit className="w-3 h-3" />
+              Log incident
+            </button>
+            <span className="text-xs text-muted">
+              {loading ? "Loading..." : `${machines.length} active`}
+            </span>
+          </div>
         </div>
 
         {error && !loading && machines.length === 0 && (
@@ -101,13 +137,30 @@ export function LineView() {
           )}
         </div>
       </section>
+
+      <LogIncidentDialog
+        open={logDialogOpen}
+        onClose={() => setLogDialogOpen(false)}
+        machines={machines}
+        defaultMachineId={logPrefill.machineId}
+        defaultAnomalyType={logPrefill.anomalyType}
+        defaultSymptom={logPrefill.symptom}
+      />
     </>
   );
 }
 
-function AnomalyBanner({ anomalies }: { anomalies: Machine[] }) {
+function AnomalyBanner({
+  anomalies,
+  onLogResolution,
+}: {
+  anomalies: Machine[];
+  onLogResolution: () => void;
+}) {
   const label =
-    anomalies.length === 1 ? "1 active anomaly" : `${anomalies.length} active anomalies`;
+    anomalies.length === 1
+      ? "1 active anomaly"
+      : `${anomalies.length} active anomalies`;
   return (
     <div className="rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-3 flex items-center gap-3">
       <div className="shrink-0 w-9 h-9 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center">
@@ -122,6 +175,14 @@ function AnomalyBanner({ anomalies }: { anomalies: Machine[] }) {
           <span className="text-muted ml-2">Ask Hunter for context &rarr;</span>
         </div>
       </div>
+      <button
+        type="button"
+        onClick={onLogResolution}
+        className="shrink-0 text-xs px-3 py-1.5 rounded border border-red-500/40 bg-red-500/10 text-red-100 hover:bg-red-500/20 hover:border-red-500/60 transition-colors flex items-center gap-1.5 font-medium"
+      >
+        <ClipboardEdit className="w-3.5 h-3.5" />
+        Log resolution
+      </button>
     </div>
   );
 }

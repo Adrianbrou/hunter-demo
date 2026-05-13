@@ -86,13 +86,48 @@ async function fetchContext() {
     .order("ts", { ascending: false })
     .limit(20);
 
-  return { machines: machines || [], logs: logs || [] };
+  // Past resolved incidents from the team's history (last 60 days)
+  const sixtyDaysAgo = new Date(
+    Date.now() - 60 * 24 * 60 * 60 * 1000,
+  ).toISOString();
+  const { data: incidents } = await supabase
+    .from("incident_memory")
+    .select("*")
+    .gte("occurred_at", sixtyDaysAgo)
+    .order("occurred_at", { ascending: false });
+
+  return {
+    machines: machines || [],
+    logs: logs || [],
+    incidents: incidents || [],
+  };
+}
+
+function filterRelevantIncidents(
+  incidents: any[],
+  machines: any[],
+  logs: any[],
+): any[] {
+  const alarmMachineIds = new Set(
+    machines.filter((m) => m.status === "alarm").map((m) => m.id),
+  );
+  const recentAnomalyTypes = new Set(
+    logs
+      .filter((l) => l.is_anomaly && l.anomaly_type)
+      .map((l) => l.anomaly_type),
+  );
+  return incidents.filter(
+    (i) =>
+      alarmMachineIds.has(i.machine_id) ||
+      recentAnomalyTypes.has(i.anomaly_type),
+  );
 }
 
 function formatContextForPrompt(
   machines: any[],
   logs: any[],
   kbDocs: any[],
+  incidents: any[],
 ): string {
   let context = "## Current Machine State\n\n";
   for (const m of machines) {
@@ -118,6 +153,31 @@ function formatContextForPrompt(
     context += "## Relevant Knowledge Base Articles\n\n";
     for (const doc of kbDocs) {
       context += `### ${doc.doc_id}: ${doc.title}\n${doc.content}\n\n`;
+    }
+  }
+
+  if (incidents.length > 0) {
+    context +=
+      "## Your team's past resolved incidents (institutional memory)\n\n";
+    context +=
+      "These are real fixes operators applied on these specific lines. Lean on these when the current pattern matches a past incident, because they reflect what actually worked here, not just what the manual recommends.\n\n";
+    for (const inc of incidents) {
+      const occurred = new Date(inc.occurred_at);
+      const date = occurred.toLocaleDateString("en-US");
+      const daysAgo = Math.round(
+        (Date.now() - occurred.getTime()) / (24 * 60 * 60 * 1000),
+      );
+      context += `### ${date} (${daysAgo} days ago) - ${inc.machine_id} - ${inc.anomaly_type}\n`;
+      context += `Symptom: ${inc.symptom}\n`;
+      context += `Root cause: ${inc.root_cause}\n`;
+      context += `Fix: ${inc.fix_applied}\n`;
+      if (inc.fixed_by) context += `Fixed by: ${inc.fixed_by}\n`;
+      if (inc.resolution_minutes !== null) {
+        context += `Resolution time: ${inc.resolution_minutes} minutes\n`;
+      }
+      context += `Outcome: ${inc.outcome}\n`;
+      if (inc.notes) context += `Notes: ${inc.notes}\n`;
+      context += "\n";
     }
   }
 
@@ -150,11 +210,21 @@ serve(async (req: Request) => {
     }
 
     // Pull context from Supabase
-    const { machines, logs } = await fetchContext();
+    const { machines, logs, incidents } = await fetchContext();
     const activeMachineIds = machines.map((m) => m.id);
     const kbDocs = await fetchRelevantKnowledge(question, activeMachineIds);
+    const relevantIncidents = filterRelevantIncidents(
+      incidents,
+      machines,
+      logs,
+    );
 
-    const contextBlock = formatContextForPrompt(machines, logs, kbDocs);
+    const contextBlock = formatContextForPrompt(
+      machines,
+      logs,
+      kbDocs,
+      incidents,
+    );
 
     // Build messages
     const messages: Array<{ role: "user" | "assistant"; content: string }> = [
@@ -180,6 +250,7 @@ serve(async (req: Request) => {
       JSON.stringify({
         answer,
         citations: kbDocs.map((d) => ({ doc_id: d.doc_id, title: d.title })),
+        matchedIncidents: relevantIncidents.length,
         usage: response.usage,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
