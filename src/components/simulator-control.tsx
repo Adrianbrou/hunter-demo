@@ -43,7 +43,8 @@ const NOMINAL_LOGS_BY_LINE: Record<string, string[]> = {
 
 const MACHINE_ANCHORS: Record<string, { temp_c: number; speed_mpm: number }> = {
   "line-1": { temp_c: 185.4, speed_mpm: 4.6 },
-  "line-2": { temp_c: 192.1, speed_mpm: 3.8 },
+  // Line 2 is intentionally drifting (WATCH state) for the morning-meeting demo
+  "line-2": { temp_c: 196.0, speed_mpm: 3.6 },
   "line-3": { temp_c: 198.5, speed_mpm: 3.2 },
 };
 
