@@ -55,16 +55,19 @@ export function LogIncidentDialog({
   const [outcome, setOutcome] = useState("resolved");
   const [notes, setNotes] = useState("");
 
-  // Reset prefilled fields whenever the dialog reopens with new context
+  // Reset prefilled fields only when the dialog transitions from closed to
+  // open. We intentionally do NOT depend on machines / defaults so the
+  // form does not clear itself when the parent re-renders (e.g. when the
+  // machines list updates over Realtime every ~15 seconds).
   useEffect(() => {
-    if (open) {
-      setMachineId(defaultMachineId ?? machines[0]?.id ?? "");
-      setAnomalyType(defaultAnomalyType ?? "speed_deviation");
-      setSymptom(defaultSymptom ?? "");
-      setError(null);
-      setSuccess(false);
-    }
-  }, [open, defaultMachineId, defaultAnomalyType, defaultSymptom, machines]);
+    if (!open) return;
+    setMachineId(defaultMachineId ?? machines[0]?.id ?? "");
+    setAnomalyType(defaultAnomalyType ?? "speed_deviation");
+    setSymptom(defaultSymptom ?? "");
+    setError(null);
+    setSuccess(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   // Close on Escape
   useEffect(() => {
@@ -167,6 +170,7 @@ export function LogIncidentDialog({
             {/* Machine */}
             <Field label="Machine">
               <select
+                aria-label="Machine"
                 value={machineId}
                 onChange={(e) => setMachineId(e.target.value)}
                 required
@@ -183,6 +187,7 @@ export function LogIncidentDialog({
             {/* Anomaly type */}
             <Field label="Anomaly type">
               <select
+                aria-label="Anomaly type"
                 value={anomalyType}
                 onChange={(e) => setAnomalyType(e.target.value)}
                 required
@@ -278,6 +283,8 @@ export function LogIncidentDialog({
             {/* Notes */}
             <Field label="Notes" hint="Optional. Context for future operators.">
               <textarea
+                aria-label="Notes"
+                placeholder="Anything future operators should know."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
